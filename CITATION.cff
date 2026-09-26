@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: "kaufland-mcp-server: Kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, shipments, tickets and storefronts."
+message: "If you use this software, please cite AnythingMCP, which it is built on."
+type: software
+authors:
+  - name: "KOCH Freiburg GmbH"
+repository-code: "https://github.com/kochfreiburg/kaufland-mcp-server"
+url: "https://anythingmcp.com/guides/connect-kaufland-to-claude"
+license: AGPL-3.0-only
+references:
+  - type: software
+    title: "AnythingMCP"
+    authors:
+      - name: "helpcode.ai GmbH"
+    repository-code: "https://github.com/HelpCode-ai/anythingmcp"
