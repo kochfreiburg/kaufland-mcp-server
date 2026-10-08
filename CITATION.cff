@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "kaufland-mcp-server: Kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, shipments, tickets and storefronts."
+title: "kaufland-mcp-server: Kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, tickets, warehouses and storefronts."
 message: "If you use this software, please cite AnythingMCP, which it is built on."
 type: software
 authors:

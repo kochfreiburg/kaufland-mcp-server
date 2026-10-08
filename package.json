@@ -2,7 +2,7 @@
   "name": "kaufland-mcp-server",
   "private": true,
   "type": "module",
-  "description": "Kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, shipments, tickets and storefronts.",
+  "description": "Kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, tickets, warehouses and storefronts.",
   "scripts": {
     "smoke": "node scripts/smoke.mjs",
     "render-tools": "node scripts/render-tools.mjs",

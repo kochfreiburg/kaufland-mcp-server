@@ -2,12 +2,12 @@
 
 **English** · [Deutsch](docs/README.de.md)
 
-**Connect Kaufland to Claude, ChatGPT and Copilot: kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, shipments, tickets and storefronts as MCP tools.** Powered by [AnythingMCP](https://github.com/HelpCode-ai/anythingmcp).
+**Connect Kaufland to Claude, ChatGPT and Copilot: kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, tickets, warehouses and storefronts as MCP tools.** Powered by [AnythingMCP](https://github.com/HelpCode-ai/anythingmcp).
 
-Kaufland MCP Server gives Claude, ChatGPT, Copilot and Cursor 8 tools for Kaufland: kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, shipments, tickets and storefronts. Every tool only reads. It runs on AnythingMCP: one click on AnythingMCP Cloud, or self-hosted with Docker. Credentials are stored encrypted and every call is audited.
+Kaufland MCP Server gives Claude, ChatGPT, Copilot and Cursor 7 tools for Kaufland: kaufland Marketplace MCP server: Claude & ChatGPT read your Kaufland seller orders, units, tickets, warehouses and storefronts. Every tool only reads. It runs on AnythingMCP: one click on AnythingMCP Cloud, or self-hosted with Docker. Credentials are stored encrypted and every call is audited.
 
-**Status:** not yet verified against a live system. The adapter follows the vendor's API documentation; please report what you find.  
-**Adapter synced:** <!-- synced -->2026-09-26
+**Last verified:** 2026-10-08 against a live Kaufland seller account on AnythingMCP Cloud (read-only calls of all 7 tools through the production connector).  
+**Adapter synced:** <!-- synced -->2026-10-08
 
 Maintained by [KOCH Freiburg GmbH](https://www.kochfreiburg.de/), which runs AnythingMCP in production. Built on [AnythingMCP](https://github.com/HelpCode-ai/anythingmcp) by helpcode.ai.
 
@@ -52,19 +52,18 @@ npm install && node scripts/smoke.mjs
 
 ## Tools
 
-8 tools, generated from [`adapter/kaufland.json`](adapter/kaufland.json). **read** tools cannot change anything in the source system.
+7 tools, generated from [`adapter/kaufland.json`](adapter/kaufland.json). **read** tools cannot change anything in the source system.
 
 <!-- tools:start (generated from adapter/*.json, do not edit) -->
 | Tool | What it does | Access |
 |---|---|---|
 | `kaufland_list_warehouses` | List the seller's warehouses with their id, name and address. | read |
-| `kaufland_list_orders` | List orders in a time window with their buyer, storefront, totals and status. | read |
-| `kaufland_get_order` | Read one order in full: the buyer, the delivery address, the payment and every order unit with its own price, status and fulfilment state. | read |
+| `kaufland_list_orders` | List orders in a time window: id, storefront, creation time and number of units. | read |
+| `kaufland_get_order` | Read one order in full: the buyer, the billing and shipping address and every order unit with its own price, status and delivery window. | read |
 | `kaufland_list_order_units` | List individual order units — the level Kaufland actually fulfils, cancels and pays out at. | read |
 | `kaufland_list_units` | List the seller's units (offers) with their EAN, condition, price, stock and the storefront each is listed on. | read |
-| `kaufland_list_shipments` | List reported shipments with their carrier, tracking number and the order units they cover — the answer to whether something has actually gone out. | read |
 | `kaufland_list_tickets` | List customer service tickets with their subject, status and the order they relate to — where a buyer complaint shows up before it becomes a rating. | read |
-| `kaufland_list_storefronts` | List the storefronts this seller is active on, with the currency and locale of each. | read |
+| `kaufland_list_storefronts` | List the storefronts (one per country) Kaufland runs, with the currency and locale of each. | read |
 <!-- tools:end -->
 
 ## Example prompts
@@ -87,16 +86,18 @@ More in [examples/prompts.md](examples/prompts.md).
 **The secret never travels.** Kaufland does not accept a bearer token: every request carries `Shop-Client-Key`, `Shop-Timestamp` and `Shop-Signature`, where the signature is an HMAC-SHA256 over the canonical string
 
 ```
-<METHOD>\n<FULL URL INCLUDING QUERY>\n<BODY>\n<UNIX TIMESTAMP>\n
+<METHOD>\n<FULL URL INCLUDING QUERY>\n<BODY>\n<UNIX TIMESTAMP>
 ```
 
-keyed with the secret. AnythingMCP computes it per request and sends the timestamp it used, so the server can recompute the same string.
+keyed with the secret, with no newline after the timestamp. AnythingMCP computes it per request and sends the timestamp it used, so the server can recompute the same string.
 
 **A signature is only valid for a few minutes.** Kaufland rejects a request whose timestamp has drifted, which means a 401 here can be a clock problem rather than a key problem. If every call fails and the keys are definitely right, check the host's time.
 
-**Storefronts are per country.** Kaufland runs `de`, `cz`, `sk`, `pl` and `at` storefronts and most endpoints take a `storefront` parameter. Omitting it gives you the seller's default, which is rarely what a report about one market wants.
+**Storefronts are per country.** Kaufland runs a storefront per country (`de`, `cz`, `sk`, `pl`, `at` and more); `kaufland_list_storefronts` returns the current list. Most endpoints take a `storefront` parameter. Omitting it gives you the seller's default, which is rarely what a report about one market wants.
 
 **Orders page with offset and limit**, and `ts_created_from` / `ts_created_to` bound the window — both ISO 8601. Ask for the window you mean; the default is short.
+
+**Shipments** have no list endpoint in the Seller API: for an order's delivery details call `kaufland_get_order` with `embedded=delivery`.
 
 **Order units are where the money is.** An order carries `order_units`, each with its own status, price and fulfilment state. A part-cancelled order is normal, so a revenue figure should sum the units that were actually fulfilled rather than the order total.
 
@@ -104,7 +105,7 @@ keyed with the secret. AnythingMCP computes it per request and sends the timesta
 
 ## Security
 
-- **Read or write is your choice.** All 8 tools only read. Assign the connector to an MCP server whose role whitelists only the tools you want, and the rest are invisible to that client.
+- **Read or write is your choice.** All 7 tools only read. Assign the connector to an MCP server whose role whitelists only the tools you want, and the rest are invisible to that client.
 - **Credentials** are encrypted with AES-256-GCM and never shown to the model.
 - **Response mapping** drops or reshapes fields per tool before they reach the model, e.g. bank details or personal data.
 - **Audit log:** every call is recorded with input, output, duration and status, in your own database when self-hosted.
@@ -113,7 +114,7 @@ keyed with the secret. AnythingMCP computes it per request and sends the timesta
 ## FAQ
 
 ### Is there a Kaufland Marketplace MCP server?
-Yes, this one. It connects the Kaufland Marketplace seller API to Claude, ChatGPT and Copilot through AnythingMCP: 8 tools for orders, order units, units (offers), shipments, tickets, storefronts and warehouses.
+Yes, this one. It connects the Kaufland Marketplace seller API to Claude, ChatGPT and Copilot through AnythingMCP: 7 tools for orders, order units, units (offers), tickets, storefronts and warehouses.
 
 ### What do I need to connect it?
 A Kaufland seller account and an API key pair from the Seller Portal (Settings → API keys): the Client Key and the Secret Key.
